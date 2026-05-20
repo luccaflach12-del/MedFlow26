@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedFlow — Pacientes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #F4F6FA; --surface: #fff; --surface2: #F1F5F9;
+      --border: #E2E8F0; --text: #0F172A; --muted: #94A3B8;
+      --accent: #185FA5; --accent2: #378ADD; --green: #1D9E75; --red: #E24B4A; --radius: 10px;
+    }
+    body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); min-height: 100vh; display: flex; }
+    .sidebar { width: 220px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; position: sticky; top: 0; }
+    .logo { display: flex; align-items: center; gap: 10px; padding: 24px 20px; border-bottom: 1px solid var(--border); }
+    .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .logo-icon svg { width: 18px; height: 18px; }
+    .logo-text { font-family: 'Syne', sans-serif; font-size: 17px; }
+    .logo-text span:first-child { font-weight: 700; color: #0C447C; }
+    .logo-text span:last-child { font-weight: 300; color: var(--accent2); }
+    .nav { padding: 12px 0; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; font-size: 14px; color: var(--muted); cursor: pointer; transition: all 0.15s; border-right: 2px solid transparent; text-decoration: none; }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: #EFF6FF; color: var(--accent); border-right-color: var(--accent); font-weight: 500; }
+    .nav-item i { font-size: 18px; }
+    .nav-section { font-size: 10px; font-weight: 500; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; padding: 16px 20px 6px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .sidebar-footer:hover { background: var(--surface2); }
+    .user-av { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: #fff; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 500; }
+    .user-role { font-size: 11px; color: var(--muted); }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; }
+    .page-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .btn-new { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Syne', sans-serif; font-weight: 500; }
+    .btn-new:hover { background: #1A6BBF; }
+    .content { padding: 24px 28px; overflow-y: auto; flex: 1; }
+    .filters { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+    .search-box { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; flex: 1; max-width: 340px; }
+    .search-box i { color: var(--muted); font-size: 16px; }
+    .search-box input { border: none; outline: none; font-size: 13px; color: var(--text); background: transparent; width: 100%; font-family: 'DM Sans', sans-serif; }
+    .search-box input::placeholder { color: var(--muted); }
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding: 12px 16px; text-align: left; background: var(--surface2); border-bottom: 1px solid var(--border); }
+    tbody tr { border-bottom: 1px solid var(--surface2); transition: background 0.12s; cursor: pointer; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td { padding: 12px 16px; font-size: 13px; color: var(--text); vertical-align: middle; }
+    .patient-cell { display: flex; align-items: center; gap: 10px; }
+    .pat-av { width: 32px; height: 32px; border-radius: 50%; background: #EFF6FF; color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; }
+    .pat-name { font-weight: 500; }
+    .pat-detail { font-size: 11px; color: var(--muted); }
+    .badge { font-size: 10px; padding: 3px 10px; border-radius: 20px; font-weight: 500; display: inline-block; }
+    .b-green { background: #E1F5EE; color: #085041; }
+    .b-blue  { background: #E6F1FB; color: #0C447C; }
+    .action-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 4px; }
+    .action-btn:hover { background: var(--surface2); color: var(--red); }
+    .empty { text-align: center; padding: 48px; color: var(--muted); }
+    .empty i { font-size: 40px; display: block; margin-bottom: 12px; }
+    .loading { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; display: none; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--surface); border-radius: 16px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 24px 64px rgba(0,0,0,0.15); }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+    .form-group input, .form-group select { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; background: var(--surface); }
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-salvar { flex: 1; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-family: 'Syne', sans-serif; font-weight: 500; cursor: pointer; }
+    .btn-salvar:hover { background: #1A6BBF; }
+    .btn-cancelar { padding: 10px 20px; background: transparent; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; cursor: pointer; color: var(--muted); }
+    .alert-box { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+    .alert-erro { background: #FEE2E2; color: #7F1D1D; }
+    .alert-ok { background: #E1F5EE; color: #085041; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon"><svg viewBox="0 0 32 32" fill="none"><polyline points="4,20 9,13 15,23 21,9 28,16" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="logo-text"><span>Med</span><span>Flow</span></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Principal</div>
+    <a class="nav-item" href="medflow-dashboard.html"><i class="ti ti-layout-dashboard"></i>Dashboard</a>
+    <a class="nav-item" href="medflow-agenda.html"><i class="ti ti-calendar"></i>Agenda</a>
+    <a class="nav-item active" href="medflow-pacientes.html"><i class="ti ti-users"></i>Pacientes</a>
+    <div class="nav-section">Gestão</div>
+    <a class="nav-item" href="#"><i class="ti ti-currency-dollar"></i>Financeiro</a>
+    <a class="nav-item" href="#"><i class="ti ti-chart-bar"></i>Relatórios</a>
+    <a class="nav-item" href="#"><i class="ti ti-settings"></i>Configurações</a>
+  </nav>
+  <div class="sidebar-footer" onclick="logout()">
+    <div class="user-av" id="userAv">?</div>
+    <div><div class="user-name" id="userName">-</div><div class="user-role" id="userRole">-</div></div>
+    <i class="ti ti-logout" style="margin-left:auto;color:var(--muted);font-size:16px;"></i>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title">Pacientes</div>
+      <div class="page-sub" id="totalPacientes">Carregando...</div>
+    </div>
+    <button class="btn-new" onclick="abrirModal()"><i class="ti ti-plus"></i>Novo paciente</button>
+  </div>
+
+  <div class="content">
+    <div class="alert-box alert-ok" id="alertOk"></div>
+    <div class="alert-box alert-erro" id="alertErro"></div>
+
+    <div class="filters">
+      <div class="search-box">
+        <i class="ti ti-search"></i>
+        <input type="text" id="campoBusca" placeholder="Buscar por nome ou email..." oninput="buscarPacientes()">
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Paciente</th>
+            <th>Idade</th>
+            <th>Telefone</th>
+            <th>Convênio</th>
+            <th>Cadastrado em</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tabelaPacientes">
+          <tr><td colspan="6"><div class="loading">Carregando pacientes...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVO PACIENTE -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modalTitulo">Novo paciente</span>
+      <button class="modal-close" onclick="fecharModal()">×</button>
+    </div>
+    <input type="hidden" id="pacienteId">
+    <div class="form-group">
+      <label>Nome completo *</label>
+      <input type="text" id="fNome" placeholder="Maria da Silva">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="fEmail" placeholder="maria@email.com">
+      </div>
+      <div class="form-group">
+        <label>Telefone</label>
+        <input type="text" id="fTelefone" placeholder="(51) 99999-0000">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Idade</label>
+        <input type="number" id="fIdade" placeholder="38">
+      </div>
+      <div class="form-group">
+        <label>Convênio</label>
+        <select id="fConvenio">
+          <option>Particular</option>
+          <option>Unimed</option>
+          <option>Bradesco Saúde</option>
+          <option>SulAmérica</option>
+          <option>Amil</option>
+          <option>Porto Seguro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Observações</label>
+      <input type="text" id="fObs" placeholder="Alergias, histórico...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-salvar" id="btnSalvar" onclick="salvarPaciente()">Salvar paciente</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3000'
+let todosPacientes = []
+
+function getToken() { return localStorage.getItem('medflow_token') }
+function logout() {
+  localStorage.removeItem('medflow_token')
+  localStorage.removeItem('medflow_usuario')
+  window.location.href = 'medflow-login.html'
+}
+function iniciais(nome) { return nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() }
+
+function mostrarOk(msg) {
+  const el = document.getElementById('alertOk')
+  el.textContent = msg; el.style.display = 'block'
+  setTimeout(() => el.style.display = 'none', 3000)
+}
+function mostrarErro(msg) {
+  const el = document.getElementById('alertErro')
+  el.textContent = msg; el.style.display = 'block'
+  setTimeout(() => el.style.display = 'none', 4000)
+}
+
+function formatarData(str) {
+  if (!str) return '-'
+  return new Date(str).toLocaleDateString('pt-BR')
+}
+
+function renderTabela(pacientes) {
+  const tbody = document.getElementById('tabelaPacientes')
+  if (!pacientes || pacientes.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><i class="ti ti-users"></i>Nenhum paciente encontrado</div></td></tr>`
+    return
+  }
+  tbody.innerHTML = pacientes.map(p => `
+    <tr onclick="editarPaciente(${p.id})">
+      <td>
+        <div class="patient-cell">
+          <div class="pat-av">${iniciais(p.nome)}</div>
+          <div>
+            <div class="pat-name">${p.nome}</div>
+            <div class="pat-detail">${p.email || 'Sem email'}</div>
+          </div>
+        </div>
+      </td>
+      <td>${p.idade || '-'}</td>
+      <td>${p.telefone || '-'}</td>
+      <td>${p.convenio || 'Particular'}</td>
+      <td>${formatarData(p.criado_em)}</td>
+      <td>
+        <button class="action-btn" onclick="event.stopPropagation(); removerPaciente(${p.id}, '${p.nome}')">
+          <i class="ti ti-trash"></i>
+        </button>
+      </td>
+    </tr>
+  `).join('')
+}
+
+async function carregarPacientes() {
+  const token = getToken()
+  if (!token) { window.location.href = 'medflow-login.html'; return }
+
+  const usuario = JSON.parse(localStorage.getItem('medflow_usuario') || '{}')
+  if (usuario.nome) {
+    document.getElementById('userName').textContent = usuario.nome
+    document.getElementById('userRole').textContent = usuario.cargo === 'medico' ? 'Médico' : 'Recepcionista'
+    document.getElementById('userAv').textContent = iniciais(usuario.nome)
+  }
+
+  try {
+    const res = await fetch(`${API}/pacientes`, { headers: { 'Authorization': `Bearer ${token}` } })
+    if (res.status === 401) { logout(); return }
+    todosPacientes = await res.json()
+    document.getElementById('totalPacientes').textContent = `${todosPacientes.length} paciente(s) cadastrado(s)`
+    renderTabela(todosPacientes)
+  } catch {
+    mostrarErro('Erro ao carregar pacientes. Verifique se a API está rodando.')
+  }
+}
+
+function buscarPacientes() {
+  const busca = document.getElementById('campoBusca').value.toLowerCase()
+  const filtrados = todosPacientes.filter(p =>
+    p.nome.toLowerCase().includes(busca) || (p.email && p.email.toLowerCase().includes(busca))
+  )
+  renderTabela(filtrados)
+}
+
+function abrirModal(paciente = null) {
+  document.getElementById('pacienteId').value = ''
+  document.getElementById('fNome').value = ''
+  document.getElementById('fEmail').value = ''
+  document.getElementById('fTelefone').value = ''
+  document.getElementById('fIdade').value = ''
+  document.getElementById('fObs').value = ''
+  document.getElementById('fConvenio').value = 'Particular'
+  document.getElementById('modalTitulo').textContent = 'Novo paciente'
+  document.getElementById('btnSalvar').textContent = 'Salvar paciente'
+
+  if (paciente) {
+    document.getElementById('pacienteId').value = paciente.id
+    document.getElementById('fNome').value = paciente.nome || ''
+    document.getElementById('fEmail').value = paciente.email || ''
+    document.getElementById('fTelefone').value = paciente.telefone || ''
+    document.getElementById('fIdade').value = paciente.idade || ''
+    document.getElementById('fObs').value = paciente.observacoes || ''
+    document.getElementById('fConvenio').value = paciente.convenio || 'Particular'
+    document.getElementById('modalTitulo').textContent = 'Editar paciente'
+    document.getElementById('btnSalvar').textContent = 'Salvar alterações'
+  }
+
+  document.getElementById('modalOverlay').classList.add('show')
+}
+
+function fecharModal() {
+  document.getElementById('modalOverlay').classList.remove('show')
+}
+
+async function editarPaciente(id) {
+  const token = getToken()
+  try {
+    const res = await fetch(`${API}/pacientes/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+    const paciente = await res.json()
+    abrirModal(paciente)
+  } catch {
+    mostrarErro('Erro ao carregar dados do paciente.')
+  }
+}
+
+async function salvarPaciente() {
+  const token = getToken()
+  const id    = document.getElementById('pacienteId').value
+  const dados = {
+    nome:       document.getElementById('fNome').value.trim(),
+    email:      document.getElementById('fEmail').value.trim(),
+    telefone:   document.getElementById('fTelefone').value.trim(),
+    idade:      parseInt(document.getElementById('fIdade').value) || null,
+    convenio:   document.getElementById('fConvenio').value,
+    observacoes: document.getElementById('fObs').value.trim()
+  }
+
+  if (!dados.nome) return mostrarErro('O nome é obrigatório.')
+
+  const btn = document.getElementById('btnSalvar')
+  btn.disabled = true
+  btn.textContent = 'Salvando...'
+
+  try {
+    const url    = id ? `${API}/pacientes/${id}` : `${API}/pacientes`
+    const method = id ? 'PUT' : 'POST'
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(dados)
+    })
+    const resultado = await res.json()
+
+    if (!res.ok) { mostrarErro(resultado.erro || 'Erro ao salvar.'); btn.disabled = false; btn.textContent = 'Salvar'; return }
+
+    fecharModal()
+    mostrarOk(id ? 'Paciente atualizado!' : 'Paciente cadastrado!')
+    carregarPacientes()
+  } catch {
+    mostrarErro('Erro ao salvar paciente.')
+  }
+
+  btn.disabled = false
+  btn.textContent = 'Salvar paciente'
+}
+
+async function removerPaciente(id, nome) {
+  if (!confirm(`Remover o paciente "${nome}"? Esta ação não pode ser desfeita.`)) return
+  const token = getToken()
+  try {
+    await fetch(`${API}/pacientes/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
+    mostrarOk('Paciente removido.')
+    carregarPacientes()
+  } catch {
+    mostrarErro('Erro ao remover paciente.')
+  }
+}
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) fecharModal()
+})
+
+carregarPacientes()
+</script>
+</body>
+</html>

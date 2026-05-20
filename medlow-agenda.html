@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedFlow — Agenda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #F4F6FA; --surface: #fff; --surface2: #F1F5F9;
+      --border: #E2E8F0; --text: #0F172A; --muted: #94A3B8;
+      --accent: #185FA5; --accent2: #378ADD; --green: #1D9E75; --amber: #BA7517; --red: #E24B4A; --radius: 10px;
+    }
+    body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); min-height: 100vh; display: flex; }
+    .sidebar { width: 220px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; position: sticky; top: 0; }
+    .logo { display: flex; align-items: center; gap: 10px; padding: 24px 20px; border-bottom: 1px solid var(--border); }
+    .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .logo-icon svg { width: 18px; height: 18px; }
+    .logo-text { font-family: 'Syne', sans-serif; font-size: 17px; }
+    .logo-text span:first-child { font-weight: 700; color: #0C447C; }
+    .logo-text span:last-child { font-weight: 300; color: var(--accent2); }
+    .nav { padding: 12px 0; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; font-size: 14px; color: var(--muted); cursor: pointer; transition: all 0.15s; border-right: 2px solid transparent; text-decoration: none; }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: #EFF6FF; color: var(--accent); border-right-color: var(--accent); font-weight: 500; }
+    .nav-item i { font-size: 18px; }
+    .nav-section { font-size: 10px; font-weight: 500; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; padding: 16px 20px 6px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .sidebar-footer:hover { background: var(--surface2); }
+    .user-av { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: #fff; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 500; }
+    .user-role { font-size: 11px; color: var(--muted); }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; }
+    .page-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-new { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Syne', sans-serif; font-weight: 500; }
+    .btn-new:hover { background: #1A6BBF; }
+    .date-nav { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .date-nav button { padding: 7px 12px; background: var(--surface); border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
+    .date-nav button:hover { background: var(--surface2); }
+    .date-nav input[type="date"] { padding: 7px 12px; font-size: 13px; border: none; border-left: 1px solid var(--border); border-right: 1px solid var(--border); font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--surface2); outline: none; }
+    .agenda-layout { display: grid; grid-template-columns: 1fr 260px; flex: 1; overflow: hidden; }
+    .cal-wrap { padding: 20px 24px; overflow-y: auto; }
+    .consultas-lista { display: flex; flex-direction: column; gap: 10px; }
+    .consulta-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; cursor: pointer; transition: all 0.15s; border-left: 3px solid var(--accent); }
+    .consulta-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
+    .consulta-card.confirmado { border-left-color: var(--green); }
+    .consulta-card.cancelado { border-left-color: var(--red); opacity: 0.6; }
+    .consulta-card.realizado { border-left-color: var(--muted); opacity: 0.7; }
+    .consulta-hora { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+    .consulta-nome { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+    .consulta-info { font-size: 12px; color: var(--muted); }
+    .badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; float: right; }
+    .b-green { background: #E1F5EE; color: #085041; }
+    .b-amber { background: #FAEEDA; color: #633806; }
+    .b-blue  { background: #E6F1FB; color: #0C447C; }
+    .b-red   { background: #FEE2E2; color: #7F1D1D; }
+    .b-gray  { background: #F1F5F9; color: #64748B; }
+    .empty { text-align: center; padding: 48px; color: var(--muted); }
+    .empty i { font-size: 40px; display: block; margin-bottom: 12px; }
+    .loading { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+    .rp { background: var(--surface); border-left: 1px solid var(--border); padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+    .rp-title { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+    .detail-card { background: var(--surface2); border-radius: 8px; padding: 14px; }
+    .detail-row { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-key { color: var(--muted); }
+    .detail-val { font-weight: 500; color: var(--text); }
+    .actions { display: flex; flex-direction: column; gap: 8px; }
+    .btn-action { width: 100%; padding: 9px; border-radius: 8px; border: none; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .btn-confirmar { background: var(--green); color: #fff; }
+    .btn-confirmar:hover { background: #178060; }
+    .btn-cancelar-c { background: transparent; border: 1px solid #FECACA; color: var(--red); }
+    .btn-cancelar-c:hover { background: #FEE2E2; }
+    .btn-sec { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-sec:hover { background: var(--surface2); }
+    .placeholder-rp { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 13px; }
+    .placeholder-rp i { font-size: 32px; display: block; margin-bottom: 8px; }
+    .alert-box { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; display: none; }
+    .alert-ok { background: #E1F5EE; color: #085041; }
+    .alert-erro { background: #FEE2E2; color: #7F1D1D; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--surface); border-radius: 16px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 24px 64px rgba(0,0,0,0.15); }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+    .form-group input, .form-group select { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; background: var(--surface); }
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-salvar { flex: 1; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-family: 'Syne', sans-serif; font-weight: 500; cursor: pointer; }
+    .btn-salvar:hover { background: #1A6BBF; }
+    .btn-cancelar-m { padding: 10px 20px; background: transparent; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; cursor: pointer; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon"><svg viewBox="0 0 32 32" fill="none"><polyline points="4,20 9,13 15,23 21,9 28,16" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="logo-text"><span>Med</span><span>Flow</span></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Principal</div>
+    <a class="nav-item" href="medflow-dashboard.html"><i class="ti ti-layout-dashboard"></i>Dashboard</a>
+    <a class="nav-item active" href="medflow-agenda.html"><i class="ti ti-calendar"></i>Agenda</a>
+    <a class="nav-item" href="medflow-pacientes.html"><i class="ti ti-users"></i>Pacientes</a>
+    <div class="nav-section">Gestão</div>
+    <a class="nav-item" href="#"><i class="ti ti-currency-dollar"></i>Financeiro</a>
+    <a class="nav-item" href="#"><i class="ti ti-chart-bar"></i>Relatórios</a>
+    <a class="nav-item" href="#"><i class="ti ti-settings"></i>Configurações</a>
+  </nav>
+  <div class="sidebar-footer" onclick="logout()">
+    <div class="user-av" id="userAv">?</div>
+    <div><div class="user-name" id="userName">-</div><div class="user-role" id="userRole">-</div></div>
+    <i class="ti ti-logout" style="margin-left:auto;color:var(--muted);font-size:16px;"></i>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title">Agenda</div>
+      <div class="page-sub" id="labelData">Hoje</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="date-nav">
+        <button onclick="mudarDia(-1)">‹</button>
+        <input type="date" id="inputData" onchange="carregarAgenda()">
+        <button onclick="mudarDia(1)">›</button>
+      </div>
+      <button class="btn-new" onclick="abrirModal()"><i class="ti ti-plus"></i>Nova consulta</button>
+    </div>
+  </div>
+
+  <div class="agenda-layout">
+    <div class="cal-wrap">
+      <div class="alert-box alert-ok" id="alertOk"></div>
+      <div class="alert-box alert-erro" id="alertErro"></div>
+      <div class="consultas-lista" id="listaConsultas">
+        <div class="loading">Carregando agenda...</div>
+      </div>
+    </div>
+
+    <div class="rp">
+      <div id="painelDetalhe">
+        <div class="placeholder-rp">
+          <i class="ti ti-calendar" style="color:var(--muted)"></i>
+          Clique em uma consulta para ver os detalhes
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVA CONSULTA -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Nova consulta</span>
+      <button class="modal-close" onclick="fecharModal()">×</button>
+    </div>
+    <div class="form-group">
+      <label>Paciente *</label>
+      <select id="fPaciente"><option value="">Selecione o paciente...</option></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Data *</label>
+        <input type="date" id="fData">
+      </div>
+      <div class="form-group">
+        <label>Hora *</label>
+        <input type="time" id="fHora">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="fTipo">
+          <option>Consulta</option>
+          <option>Retorno</option>
+          <option>Exames</option>
+          <option>Urgência</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Especialidade</label>
+        <select id="fEspecialidade">
+          <option>Clínico Geral</option>
+          <option>Cardiologia</option>
+          <option>Pediatria</option>
+          <option>Ginecologia</option>
+          <option>Ortopedia</option>
+          <option>Dermatologia</option>
+          <option>Neurologia</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Observações</label>
+      <input type="text" id="fObs" placeholder="Motivo da consulta...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancelar-m" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-salvar" onclick="salvarConsulta()">Agendar consulta</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3000'
+let consultaSelecionada = null
+
+function getToken() { return localStorage.getItem('medflow_token') }
+function logout() {
+  localStorage.removeItem('medflow_token')
+  localStorage.removeItem('medflow_usuario')
+  window.location.href = 'medflow-login.html'
+}
+function iniciais(nome) { return nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() }
+
+function mostrarOk(msg) {
+  const el = document.getElementById('alertOk'); el.textContent = msg; el.style.display = 'block'
+  setTimeout(() => el.style.display = 'none', 3000)
+}
+function mostrarErro(msg) {
+  const el = document.getElementById('alertErro'); el.textContent = msg; el.style.display = 'block'
+  setTimeout(() => el.style.display = 'none', 4000)
+}
+
+function badgeStatus(status) {
+  const map = { 'Confirmado': 'b-green', 'Pendente': 'b-amber', 'Cancelado': 'b-red', 'Aguardando': 'b-blue', 'Realizado': 'b-gray' }
+  return `<span class="badge ${map[status] || 'b-blue'}">${status}</span>`
+}
+
+function dataHoje() {
+  return new Date().toISOString().split('T')[0]
+}
+
+function mudarDia(delta) {
+  const input = document.getElementById('inputData')
+  const data = new Date(input.value + 'T00:00:00')
+  data.setDate(data.getDate() + delta)
+  input.value = data.toISOString().split('T')[0]
+  carregarAgenda()
+}
+
+async function carregarAgenda() {
+  const token = getToken()
+  if (!token) { window.location.href = 'medflow-login.html'; return }
+
+  const usuario = JSON.parse(localStorage.getItem('medflow_usuario') || '{}')
+  if (usuario.nome) {
+    document.getElementById('userName').textContent = usuario.nome
+    document.getElementById('userRole').textContent = usuario.cargo === 'medico' ? 'Médico' : 'Recepcionista'
+    document.getElementById('userAv').textContent = iniciais(usuario.nome)
+  }
+
+  const data = document.getElementById('inputData').value
+  const opcoes = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+  const label = new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', opcoes)
+  document.getElementById('labelData').textContent = label
+
+  const lista = document.getElementById('listaConsultas')
+  lista.innerHTML = '<div class="loading">Carregando...</div>'
+
+  try {
+    const res = await fetch(`${API}/agenda?data=${data}`, { headers: { 'Authorization': `Bearer ${token}` } })
+    if (res.status === 401) { logout(); return }
+    const consultas = await res.json()
+
+    if (!consultas || consultas.length === 0) {
+      lista.innerHTML = `<div class="empty"><i class="ti ti-calendar-off"></i>Nenhuma consulta neste dia</div>`
+      return
+    }
+
+    lista.innerHTML = consultas.map(c => `
+      <div class="consulta-card ${c.status.toLowerCase()}" onclick="selecionarConsulta(${c.id})">
+        ${badgeStatus(c.status)}
+        <div class="consulta-hora">${c.hora}</div>
+        <div class="consulta-nome">${c.paciente_nome}</div>
+        <div class="consulta-info">${c.tipo} · ${c.especialidade} · ${c.convenio || 'Particular'}</div>
+      </div>
+    `).join('')
+  } catch {
+    mostrarErro('Erro ao carregar agenda. Verifique se a API está rodando.')
+  }
+}
+
+async function selecionarConsulta(id) {
+  const token = getToken()
+  try {
+    const res = await fetch(`${API}/agenda/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+    consultaSelecionada = await res.json()
+
+    document.getElementById('painelDetalhe').innerHTML = `
+      <div class="rp-title">Consulta selecionada</div>
+      <div class="detail-card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:#EFF6FF;color:#185FA5;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;">${iniciais(consultaSelecionada.paciente_nome)}</div>
+          <div>
+            <div style="font-size:14px;font-weight:500;">${consultaSelecionada.paciente_nome}</div>
+            <div style="font-size:11px;color:var(--muted);">${consultaSelecionada.paciente_email || ''}</div>
+          </div>
+        </div>
+        <div class="detail-row"><span class="detail-key">Horário</span><span class="detail-val">${consultaSelecionada.hora}</span></div>
+        <div class="detail-row"><span class="detail-key">Tipo</span><span class="detail-val">${consultaSelecionada.tipo}</span></div>
+        <div class="detail-row"><span class="detail-key">Especialidade</span><span class="detail-val">${consultaSelecionada.especialidade}</span></div>
+        <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val">${consultaSelecionada.status}</span></div>
+        <div class="detail-row"><span class="detail-key">Telefone</span><span class="detail-val">${consultaSelecionada.paciente_telefone || '-'}</span></div>
+        ${consultaSelecionada.observacoes ? `<div class="detail-row"><span class="detail-key">Obs.</span><span class="detail-val">${consultaSelecionada.observacoes}</span></div>` : ''}
+      </div>
+      <div class="rp-title">Ações</div>
+      <div class="actions">
+        ${consultaSelecionada.status !== 'Confirmado' ? `<button class="btn-action btn-confirmar" onclick="atualizarStatus(${id}, 'Confirmado')"><i class="ti ti-check"></i> Confirmar consulta</button>` : ''}
+        ${consultaSelecionada.status !== 'Realizado' ? `<button class="btn-action btn-sec" onclick="atualizarStatus(${id}, 'Realizado')"><i class="ti ti-check-check"></i> Marcar como realizada</button>` : ''}
+        ${consultaSelecionada.status !== 'Cancelado' ? `<button class="btn-action btn-cancelar-c" onclick="atualizarStatus(${id}, 'Cancelado')"><i class="ti ti-x"></i> Cancelar consulta</button>` : ''}
+      </div>
+    `
+  } catch {
+    mostrarErro('Erro ao carregar detalhes da consulta.')
+  }
+}
+
+async function atualizarStatus(id, status) {
+  const token = getToken()
+  try {
+    const res = await fetch(`${API}/agenda/${id}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ status })
+    })
+    const dados = await res.json()
+    if (!res.ok) { mostrarErro(dados.erro || 'Erro ao atualizar.'); return }
+    mostrarOk(dados.mensagem)
+    carregarAgenda()
+    document.getElementById('painelDetalhe').innerHTML = `<div class="placeholder-rp"><i class="ti ti-calendar" style="color:var(--muted)"></i>Clique em uma consulta para ver os detalhes</div>`
+  } catch {
+    mostrarErro('Erro ao atualizar status.')
+  }
+}
+
+async function abrirModal() {
+  const token = getToken()
+  const select = document.getElementById('fPaciente')
+  select.innerHTML = '<option value="">Selecione o paciente...</option>'
+  document.getElementById('fData').value = document.getElementById('inputData').value
+  document.getElementById('fHora').value = ''
+
+  try {
+    const res = await fetch(`${API}/pacientes`, { headers: { 'Authorization': `Bearer ${token}` } })
+    const pacientes = await res.json()
+    pacientes.forEach(p => {
+      const opt = document.createElement('option')
+      opt.value = p.id
+      opt.textContent = p.nome
+      select.appendChild(opt)
+    })
+  } catch { }
+
+  document.getElementById('modalOverlay').classList.add('show')
+}
+
+function fecharModal() { document.getElementById('modalOverlay').classList.remove('show') }
+
+async function salvarConsulta() {
+  const token = getToken()
+  const dados = {
+    paciente_id:  parseInt(document.getElementById('fPaciente').value),
+    data:         document.getElementById('fData').value,
+    hora:         document.getElementById('fHora').value,
+    tipo:         document.getElementById('fTipo').value,
+    especialidade: document.getElementById('fEspecialidade').value,
+    observacoes:  document.getElementById('fObs').value
+  }
+
+  if (!dados.paciente_id) return mostrarErro('Selecione um paciente.')
+  if (!dados.data || !dados.hora) return mostrarErro('Data e hora são obrigatórios.')
+
+  try {
+    const res = await fetch(`${API}/agenda`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(dados)
+    })
+    const resultado = await res.json()
+    if (!res.ok) { mostrarErro(resultado.erro || 'Erro ao agendar.'); return }
+    fecharModal()
+    mostrarOk('Consulta agendada com sucesso!')
+    carregarAgenda()
+  } catch {
+    mostrarErro('Erro ao agendar consulta.')
+  }
+}
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) fecharModal()
+})
+
+// Inicializa com a data de hoje
+document.getElementById('inputData').value = dataHoje()
+carregarAgenda()
+</script>
+</body>
+</html>

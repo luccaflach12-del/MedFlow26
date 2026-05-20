@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedFlow — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #F4F6FA; --surface: #fff; --surface2: #F1F5F9;
+      --border: #E2E8F0; --text: #0F172A; --muted: #94A3B8;
+      --accent: #185FA5; --accent2: #378ADD;
+      --green: #1D9E75; --amber: #BA7517; --red: #E24B4A; --radius: 10px;
+    }
+    body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); min-height: 100vh; display: flex; }
+    .sidebar { width: 220px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; position: sticky; top: 0; }
+    .logo { display: flex; align-items: center; gap: 10px; padding: 24px 20px; border-bottom: 1px solid var(--border); }
+    .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .logo-icon svg { width: 18px; height: 18px; }
+    .logo-text { font-family: 'Syne', sans-serif; font-size: 17px; }
+    .logo-text span:first-child { font-weight: 700; color: #0C447C; }
+    .logo-text span:last-child { font-weight: 300; color: var(--accent2); }
+    .nav { padding: 12px 0; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; font-size: 14px; color: var(--muted); cursor: pointer; transition: all 0.15s; border-right: 2px solid transparent; text-decoration: none; }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: #EFF6FF; color: var(--accent); border-right-color: var(--accent); font-weight: 500; }
+    .nav-item i { font-size: 18px; }
+    .nav-section { font-size: 10px; font-weight: 500; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; padding: 16px 20px 6px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .sidebar-footer:hover { background: var(--surface2); }
+    .user-av { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: #fff; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 500; }
+    .user-role { font-size: 11px; color: var(--muted); }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; }
+    .page-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-logout { background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; font-size: 13px; color: var(--muted); cursor: pointer; }
+    .btn-logout:hover { background: var(--surface2); color: var(--red); border-color: var(--red); }
+    .content { padding: 24px 28px; overflow-y: auto; flex: 1; }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+    .metric-label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .metric-label i { font-size: 15px; }
+    .metric-value { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .metric-delta { font-size: 12px; color: var(--muted); }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .card-title { font-size: 13px; font-weight: 500; color: var(--text); }
+    .card-link { font-size: 12px; color: var(--accent); cursor: pointer; text-decoration: none; }
+    .appt-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--surface2); }
+    .appt-row:last-child { border-bottom: none; }
+    .appt-av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; background: #EFF6FF; color: var(--accent); }
+    .appt-name { font-size: 13px; font-weight: 500; color: var(--text); }
+    .appt-info { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .badge { font-size: 10px; padding: 3px 9px; border-radius: 20px; margin-left: auto; flex-shrink: 0; font-weight: 500; }
+    .b-green { background: #E1F5EE; color: #085041; }
+    .b-amber { background: #FAEEDA; color: #633806; }
+    .b-blue  { background: #E6F1FB; color: #0C447C; }
+    .b-red   { background: #FEE2E2; color: #7F1D1D; }
+    .empty { text-align: center; padding: 32px; color: var(--muted); font-size: 14px; }
+    .loading { text-align: center; padding: 24px; color: var(--muted); font-size: 13px; }
+    .bar-wrap { display: flex; align-items: flex-end; gap: 8px; height: 100px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--accent); }
+    .bar-label { font-size: 10px; color: var(--muted); }
+    .alert-box { background: #FEF3C7; border: 1px solid #FDE68A; border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #92400E; display: none; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon"><svg viewBox="0 0 32 32" fill="none"><polyline points="4,20 9,13 15,23 21,9 28,16" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="logo-text"><span>Med</span><span>Flow</span></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Principal</div>
+    <a class="nav-item active" href="medflow-dashboard.html"><i class="ti ti-layout-dashboard"></i>Dashboard</a>
+    <a class="nav-item" href="medflow-agenda.html"><i class="ti ti-calendar"></i>Agenda</a>
+    <a class="nav-item" href="medflow-pacientes.html"><i class="ti ti-users"></i>Pacientes</a>
+    <div class="nav-section">Gestão</div>
+    <a class="nav-item" href="#"><i class="ti ti-currency-dollar"></i>Financeiro</a>
+    <a class="nav-item" href="#"><i class="ti ti-chart-bar"></i>Relatórios</a>
+    <a class="nav-item" href="#"><i class="ti ti-settings"></i>Configurações</a>
+  </nav>
+  <div class="sidebar-footer" onclick="logout()">
+    <div class="user-av" id="userAv">?</div>
+    <div>
+      <div class="user-name" id="userName">Carregando...</div>
+      <div class="user-role" id="userRole">-</div>
+    </div>
+    <i class="ti ti-logout" style="margin-left:auto;color:var(--muted);font-size:16px;"></i>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="greeting">Carregando...</div>
+      <div class="page-sub" id="dataHoje"></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-logout" onclick="logout()"><i class="ti ti-logout"></i> Sair</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="alert-box" id="alertBox"></div>
+
+    <div class="metrics">
+      <div class="metric-card">
+        <div class="metric-label"><i class="ti ti-calendar-check" style="color:var(--accent)"></i>Consultas hoje</div>
+        <div class="metric-value" id="metConsultasHoje">-</div>
+        <div class="metric-delta">agendadas para hoje</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label"><i class="ti ti-users" style="color:var(--green)"></i>Total de pacientes</div>
+        <div class="metric-value" id="metPacientes">-</div>
+        <div class="metric-delta">cadastrados no sistema</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label"><i class="ti ti-check" style="color:var(--green)"></i>Confirmadas hoje</div>
+        <div class="metric-value" id="metConfirmadas">-</div>
+        <div class="metric-delta">consultas confirmadas</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label"><i class="ti ti-x" style="color:var(--red)"></i>Cancelamentos</div>
+        <div class="metric-value" id="metCanceladas">-</div>
+        <div class="metric-delta">canceladas hoje</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Consultas de hoje</div>
+          <a class="card-link" href="medflow-agenda.html">Ver agenda →</a>
+        </div>
+        <div id="listaConsultasHoje"><div class="loading">Carregando...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Pacientes recentes</div>
+          <a class="card-link" href="medflow-pacientes.html">Ver todos →</a>
+        </div>
+        <div id="listaPacientes"><div class="loading">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3000'
+
+function getToken() {
+  return localStorage.getItem('medflow_token')
+}
+
+function getUsuario() {
+  const u = localStorage.getItem('medflow_usuario')
+  return u ? JSON.parse(u) : null
+}
+
+function logout() {
+  localStorage.removeItem('medflow_token')
+  localStorage.removeItem('medflow_usuario')
+  window.location.href = 'medflow-login.html'
+}
+
+function iniciais(nome) {
+  return nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+}
+
+function badgeStatus(status) {
+  const map = { 'Confirmado': 'b-green', 'Pendente': 'b-amber', 'Cancelado': 'b-red', 'Aguardando': 'b-blue', 'Realizado': 'b-green' }
+  return `<span class="badge ${map[status] || 'b-blue'}">${status}</span>`
+}
+
+async function carregarDados() {
+  const token = getToken()
+  if (!token) { window.location.href = 'medflow-login.html'; return }
+
+  const usuario = getUsuario()
+  if (usuario) {
+    document.getElementById('userName').textContent = usuario.nome
+    document.getElementById('userRole').textContent = usuario.cargo === 'medico' ? 'Médico' : 'Recepcionista'
+    document.getElementById('userAv').textContent = iniciais(usuario.nome)
+    const hora = new Date().getHours()
+    const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
+    document.getElementById('greeting').textContent = `${saudacao}, ${usuario.nome.split(' ')[0]}! 👋`
+  }
+
+  const hoje = new Date()
+  const opcoes = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+  document.getElementById('dataHoje').textContent = hoje.toLocaleDateString('pt-BR', opcoes)
+
+  const headers = { 'Authorization': `Bearer ${token}` }
+
+  try {
+    // Consultas de hoje
+    const resConsultas = await fetch(`${API}/agenda/hoje`, { headers })
+    if (resConsultas.status === 401) { logout(); return }
+    const dadosConsultas = await resConsultas.json()
+
+    document.getElementById('metConsultasHoje').textContent = dadosConsultas.total || 0
+    document.getElementById('metConfirmadas').textContent = (dadosConsultas.consultas || []).filter(c => c.status === 'Confirmado').length
+    document.getElementById('metCanceladas').textContent = (dadosConsultas.consultas || []).filter(c => c.status === 'Cancelado').length
+
+    const listaEl = document.getElementById('listaConsultasHoje')
+    if (!dadosConsultas.consultas || dadosConsultas.consultas.length === 0) {
+      listaEl.innerHTML = '<div class="empty">Nenhuma consulta hoje</div>'
+    } else {
+      listaEl.innerHTML = dadosConsultas.consultas.slice(0, 5).map(c => `
+        <div class="appt-row">
+          <div class="appt-av">${iniciais(c.paciente_nome)}</div>
+          <div>
+            <div class="appt-name">${c.paciente_nome}</div>
+            <div class="appt-info">${c.hora} · ${c.tipo} · ${c.especialidade}</div>
+          </div>
+          ${badgeStatus(c.status)}
+        </div>
+      `).join('')
+    }
+
+    // Pacientes
+    const resPacientes = await fetch(`${API}/pacientes`, { headers })
+    const pacientes = await resPacientes.json()
+
+    document.getElementById('metPacientes').textContent = pacientes.length || 0
+
+    const listaPac = document.getElementById('listaPacientes')
+    if (!pacientes || pacientes.length === 0) {
+      listaPac.innerHTML = '<div class="empty">Nenhum paciente cadastrado</div>'
+    } else {
+      listaPac.innerHTML = pacientes.slice(0, 5).map(p => `
+        <div class="appt-row">
+          <div class="appt-av">${iniciais(p.nome)}</div>
+          <div>
+            <div class="appt-name">${p.nome}</div>
+            <div class="appt-info">${p.idade ? p.idade + ' anos · ' : ''}${p.convenio}</div>
+          </div>
+        </div>
+      `).join('')
+    }
+
+  } catch (erro) {
+    document.getElementById('alertBox').style.display = 'block'
+    document.getElementById('alertBox').textContent = '⚠ Não foi possível conectar à API. Verifique se o servidor está rodando.'
+  }
+}
+
+carregarDados()
+</script>
+</body>
+</html>
