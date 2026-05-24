@@ -1,24 +1,17 @@
-const sqlite3 = require('sqlite3').verbose()
+const Database = require('better-sqlite3')
+const db = new Database('medflow.db')
 
-const db = new sqlite3.Database('medflow.db', (err) => {
-  if (err) {
-    console.error('Erro ao conectar no banco:', err.message)
-  } else {
-    console.log('✅ Banco de dados MedFlow pronto!')
-  }
-})
-
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS usuarios (
+db.exec(`
+  CREATE TABLE IF NOT EXISTS usuarios (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     nome      TEXT NOT NULL,
     email     TEXT UNIQUE NOT NULL,
     senha     TEXT NOT NULL,
     cargo     TEXT DEFAULT 'medico',
     criado_em TEXT DEFAULT (datetime('now', 'localtime'))
-  )`)
+  );
 
-  db.run(`CREATE TABLE IF NOT EXISTS pacientes (
+  CREATE TABLE IF NOT EXISTS pacientes (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     nome        TEXT NOT NULL,
     email       TEXT,
@@ -27,9 +20,9 @@ db.serialize(() => {
     convenio    TEXT DEFAULT 'Particular',
     observacoes TEXT,
     criado_em   TEXT DEFAULT (datetime('now', 'localtime'))
-  )`)
+  );
 
-  db.run(`CREATE TABLE IF NOT EXISTS consultas (
+  CREATE TABLE IF NOT EXISTS consultas (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     paciente_id   INTEGER NOT NULL,
     data          TEXT NOT NULL,
@@ -40,7 +33,9 @@ db.serialize(() => {
     observacoes   TEXT,
     criado_em     TEXT DEFAULT (datetime('now', 'localtime')),
     FOREIGN KEY (paciente_id) REFERENCES pacientes(id)
-  )`)
-})
+  );
+`)
+
+console.log('✅ Banco de dados MedFlow pronto!')
 
 module.exports = db
