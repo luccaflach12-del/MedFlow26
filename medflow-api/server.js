@@ -1,24 +1,28 @@
 const express = require('express')
-const cors    = require('cors')
 
 const rotasAuth      = require('./routes/auth')
 const rotasPacientes = require('./routes/pacientes')
 const rotasAgenda    = require('./routes/agenda')
+const rotasPublicas  = require('./routes/agendamento-publico')
 
 const app = express()
 
-// Permite que o frontend HTML acesse a API
-app.use(cors())
+// CORS completo
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
+  if (req.method === 'OPTIONS') return res.sendStatus(200)
+  next()
+})
 
-// Permite receber JSON no corpo das requisições
 app.use(express.json())
 
-// Rotas
 app.use('/auth',      rotasAuth)
 app.use('/pacientes', rotasPacientes)
 app.use('/agenda',    rotasAgenda)
+app.use('/publico',   rotasPublicas)
 
-// Rota raiz para testar se a API está online
 app.get('/', (req, res) => {
   res.json({ mensagem: 'MedFlow API está funcionando!', versao: '1.0.0' })
 })

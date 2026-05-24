@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendar Consulta — MedFlow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #F4F6FA; --surface: #fff; --border: #E2E8F0;
+      --text: #0F172A; --muted: #94A3B8; --accent: #185FA5;
+      --accent2: #378ADD; --green: #1D9E75; --red: #E24B4A; --radius: 12px;
+    }
+    body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); min-height: 100vh; }
+
+    /* HEADER */
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .logo-icon svg { width: 18px; height: 18px; }
+    .logo-text { font-family: 'Syne', sans-serif; font-size: 18px; }
+    .logo-text span:first-child { font-weight: 700; color: #0C447C; }
+    .logo-text span:last-child { font-weight: 300; color: var(--accent2); }
+
+    /* HERO */
+    .hero { background: linear-gradient(135deg, #185FA5 0%, #378ADD 100%); color: #fff; padding: 40px 24px; text-align: center; }
+    .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(22px, 4vw, 32px); font-weight: 700; margin-bottom: 10px; }
+    .hero p { font-size: 15px; opacity: 0.85; font-weight: 300; }
+
+    /* STEPS */
+    .steps { display: flex; justify-content: center; gap: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0; }
+    .step { flex: 1; max-width: 180px; padding: 14px 8px; text-align: center; font-size: 12px; color: var(--muted); border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .step.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+    .step.done { color: var(--green); }
+    .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--bg); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; margin: 0 auto 6px; }
+    .step.active .step-num { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .step.done .step-num { background: var(--green); border-color: var(--green); color: #fff; }
+
+    /* CONTAINER */
+    .container { max-width: 560px; margin: 0 auto; padding: 28px 20px; }
+
+    /* CARDS */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
+    .card-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+    /* FORM */
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+    input, select { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 11px 14px; font-size: 14px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; background: var(--surface); transition: border-color 0.2s; }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(24,95,165,0.08); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* HORÁRIOS */
+    .horarios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 8px; }
+    .horario-btn { padding: 10px 8px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--surface); font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer; text-align: center; transition: all 0.15s; }
+    .horario-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .horario-btn.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .horario-btn.ocupado { background: var(--bg); border-color: var(--border); color: var(--muted); cursor: not-allowed; text-decoration: line-through; }
+    .horario-loading { text-align: center; padding: 24px; color: var(--muted); font-size: 13px; }
+
+    /* BOTÕES */
+    .btn { width: 100%; padding: 13px; border-radius: 10px; border: none; font-size: 15px; font-family: 'Syne', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #1A6BBF; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--muted); margin-top: 8px; }
+    .btn-secondary:hover { background: var(--bg); }
+
+    /* ALERTAS */
+    .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+    .alert-erro { background: #FEE2E2; color: #7F1D1D; border: 1px solid #FECACA; }
+    .alert-ok { background: #E1F5EE; color: #085041; border: 1px solid #A7F3D0; }
+
+    /* SUCESSO */
+    .sucesso { text-align: center; padding: 40px 20px; display: none; }
+    .sucesso-icon { width: 72px; height: 72px; border-radius: 50%; background: #E1F5EE; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 20px; }
+    .sucesso h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 10px; color: var(--green); }
+    .sucesso p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .detalhe-box { background: var(--bg); border-radius: 10px; padding: 16px; margin: 20px 0; text-align: left; }
+    .detalhe-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .detalhe-row:last-child { border-bottom: none; }
+    .detalhe-key { color: var(--muted); }
+    .detalhe-val { font-weight: 500; }
+
+    /* VIEWS */
+    .view { display: none; }
+    .view.show { display: block; }
+
+    /* FOOTER */
+    footer { text-align: center; padding: 24px; font-size: 12px; color: var(--muted); }
+
+    @media (max-width: 480px) {
+      .form-row { grid-template-columns: 1fr; }
+      .horarios-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">
+    <svg viewBox="0 0 32 32" fill="none"><polyline points="4,20 9,13 15,23 21,9 28,16" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="logo-text"><span>Med</span><span>Flow</span></div>
+</header>
+
+<div class="hero">
+  <h1>Agendar Consulta Online</h1>
+  <p>Escolha a data, o horário e confirme. É rápido e fácil.</p>
+</div>
+
+<div class="steps">
+  <div class="step active" id="step1"><div class="step-num">1</div>Seus dados</div>
+  <div class="step" id="step2"><div class="step-num">2</div>Data e horário</div>
+  <div class="step" id="step3"><div class="step-num">3</div>Confirmação</div>
+</div>
+
+<div class="container">
+
+  <div class="alert alert-erro" id="alertErro"></div>
+  <div class="alert alert-ok" id="alertOk"></div>
+
+  <!-- VIEW 1: DADOS DO PACIENTE -->
+  <div class="view show" id="view1">
+    <div class="card">
+      <div class="card-title">👤 Seus dados</div>
+      <div class="form-group">
+        <label>Nome completo *</label>
+        <input type="text" id="nome" placeholder="Maria da Silva">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Telefone *</label>
+          <input type="tel" id="telefone" placeholder="(51) 99999-0000">
+        </div>
+        <div class="form-group">
+          <label>Email (opcional)</label>
+          <input type="email" id="email" placeholder="seu@email.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Especialidade</label>
+        <select id="especialidade">
+          <option>Clínico Geral</option>
+          <option>Cardiologia</option>
+          <option>Pediatria</option>
+          <option>Ginecologia</option>
+          <option>Ortopedia</option>
+          <option>Dermatologia</option>
+          <option>Neurologia</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="irParaView2()">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- VIEW 2: DATA E HORÁRIO -->
+  <div class="view" id="view2">
+    <div class="card">
+      <div class="card-title">📅 Escolha a data</div>
+      <div class="form-group">
+        <input type="date" id="data" onchange="carregarHorarios()">
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🕐 Horários disponíveis</div>
+      <div id="horariosContainer">
+        <div class="horario-loading">Selecione uma data para ver os horários disponíveis</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="btnConfirmar" onclick="irParaView3()" disabled>Confirmar horário →</button>
+    <button class="btn btn-secondary" onclick="voltarView1()">← Voltar</button>
+  </div>
+
+  <!-- VIEW 3: CONFIRMAÇÃO -->
+  <div class="view" id="view3">
+    <div class="card">
+      <div class="card-title">✅ Confirmar agendamento</div>
+      <div class="detalhe-box">
+        <div class="detalhe-row"><span class="detalhe-key">Nome</span><span class="detalhe-val" id="confNome">-</span></div>
+        <div class="detalhe-row"><span class="detalhe-key">Telefone</span><span class="detalhe-val" id="confTelefone">-</span></div>
+        <div class="detalhe-row"><span class="detalhe-key">Especialidade</span><span class="detalhe-val" id="confEspecialidade">-</span></div>
+        <div class="detalhe-row"><span class="detalhe-key">Data</span><span class="detalhe-val" id="confData">-</span></div>
+        <div class="detalhe-row"><span class="detalhe-key">Horário</span><span class="detalhe-val" id="confHora">-</span></div>
+      </div>
+      <button class="btn btn-primary" id="btnAgendar" onclick="agendar()">Confirmar consulta ✓</button>
+      <button class="btn btn-secondary" onclick="voltarView2()">← Voltar</button>
+    </div>
+  </div>
+
+  <!-- TELA DE SUCESSO -->
+  <div class="sucesso" id="telaSuccesso">
+    <div class="sucesso-icon">🎉</div>
+    <h2>Consulta agendada!</h2>
+    <p>Seu agendamento foi confirmado com sucesso. Veja os detalhes abaixo:</p>
+    <div class="detalhe-box">
+      <div class="detalhe-row"><span class="detalhe-key">Paciente</span><span class="detalhe-val" id="sucNome">-</span></div>
+      <div class="detalhe-row"><span class="detalhe-key">Data</span><span class="detalhe-val" id="sucData">-</span></div>
+      <div class="detalhe-row"><span class="detalhe-key">Horário</span><span class="detalhe-val" id="sucHora">-</span></div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);">Se você informou seu email, receberá uma confirmação em breve. Em caso de dúvidas, entre em contato com a clínica.</p>
+    <button class="btn btn-secondary" onclick="novoAgendamento()" style="margin-top:16px;">Fazer outro agendamento</button>
+  </div>
+
+</div>
+
+<footer>
+  Powered by <strong style="color:var(--accent)">MedFlow</strong> — Gestão de clínicas simplificada
+</footer>
+
+<script>
+const API = 'http://localhost:3000'
+let horarioSelecionado = null
+
+// Define data mínima como hoje
+const hoje = new Date().toISOString().split('T')[0]
+document.getElementById('data').min = hoje
+document.getElementById('data').value = hoje
+
+function mostrarErro(msg) {
+  const el = document.getElementById('alertErro')
+  el.textContent = msg; el.style.display = 'block'
+  setTimeout(() => el.style.display = 'none', 4000)
+}
+
+function setStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    const s = document.getElementById('step' + i)
+    s.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '')
+  }
+}
+
+function mostrarView(n) {
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById('view' + i).classList.toggle('show', i === n)
+  }
+  document.getElementById('telaSuccesso').style.display = 'none'
+  setStep(n)
+}
+
+function irParaView2() {
+  const nome     = document.getElementById('nome').value.trim()
+  const telefone = document.getElementById('telefone').value.trim()
+  if (!nome) return mostrarErro('Por favor, informe seu nome.')
+  if (!telefone) return mostrarErro('Por favor, informe seu telefone.')
+  mostrarView(2)
+  carregarHorarios()
+}
+
+function voltarView1() { mostrarView(1) }
+
+function irParaView3() {
+  if (!horarioSelecionado) return mostrarErro('Selecione um horário.')
+  const data = document.getElementById('data').value
+  const dataFormatada = new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  document.getElementById('confNome').textContent        = document.getElementById('nome').value
+  document.getElementById('confTelefone').textContent    = document.getElementById('telefone').value
+  document.getElementById('confEspecialidade').textContent = document.getElementById('especialidade').value
+  document.getElementById('confData').textContent        = dataFormatada
+  document.getElementById('confHora').textContent        = horarioSelecionado
+  mostrarView(3)
+}
+
+function voltarView2() { mostrarView(2) }
+
+async function carregarHorarios() {
+  const data = document.getElementById('data').value
+  if (!data) return
+
+  horarioSelecionado = null
+  document.getElementById('btnConfirmar').disabled = true
+  document.getElementById('horariosContainer').innerHTML = '<div class="horario-loading">Buscando horários disponíveis...</div>'
+
+  try {
+    const res = await fetch(`${API}/publico/horarios?data=${data}`)
+    const dados = await res.json()
+
+    if (!dados.disponiveis || dados.disponiveis.length === 0) {
+      document.getElementById('horariosContainer').innerHTML = '<div class="horario-loading">Nenhum horário disponível nesta data. Tente outro dia.</div>'
+      return
+    }
+
+    const todosHorarios = [
+      '08:00','08:30','09:00','09:30','10:00','10:30',
+      '11:00','11:30','14:00','14:30','15:00','15:30',
+      '16:00','16:30','17:00'
+    ]
+
+    document.getElementById('horariosContainer').innerHTML = `
+      <div class="horarios-grid">
+        ${todosHorarios.map(h => {
+          const disponivel = dados.disponiveis.includes(h)
+          return `<button class="horario-btn ${disponivel ? '' : 'ocupado'}" 
+            onclick="${disponivel ? `selecionarHorario('${h}', this)` : ''}"
+            ${disponivel ? '' : 'disabled'}>${h}</button>`
+        }).join('')}
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:12px;">🟢 Disponível &nbsp; ⬜ Ocupado</p>
+    `
+  } catch {
+    document.getElementById('horariosContainer').innerHTML = '<div class="horario-loading">Erro ao carregar horários. Verifique sua conexão.</div>'
+  }
+}
+
+function selecionarHorario(hora, btn) {
+  document.querySelectorAll('.horario-btn').forEach(b => b.classList.remove('selected'))
+  btn.classList.add('selected')
+  horarioSelecionado = hora
+  document.getElementById('btnConfirmar').disabled = false
+}
+
+async function agendar() {
+  const btn = document.getElementById('btnAgendar')
+  btn.disabled = true
+  btn.textContent = 'Agendando...'
+
+  const dados = {
+    nome:         document.getElementById('nome').value.trim(),
+    telefone:     document.getElementById('telefone').value.trim(),
+    email:        document.getElementById('email').value.trim(),
+    data:         document.getElementById('data').value,
+    hora:         horarioSelecionado,
+    especialidade: document.getElementById('especialidade').value
+  }
+
+  try {
+    const res = await fetch(`${API}/publico/agendar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    })
+    const resultado = await res.json()
+
+    if (!res.ok) {
+      mostrarErro(resultado.erro || 'Erro ao agendar. Tente novamente.')
+      btn.disabled = false
+      btn.textContent = 'Confirmar consulta ✓'
+      return
+    }
+
+    // Mostra tela de sucesso
+    const dataFormatada = new Date(dados.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+    document.getElementById('sucNome').textContent = dados.nome
+    document.getElementById('sucData').textContent = dataFormatada
+    document.getElementById('sucHora').textContent = dados.hora
+
+    for (let i = 1; i <= 3; i++) document.getElementById('view' + i).classList.remove('show')
+    document.getElementById('telaSuccesso').style.display = 'block'
+    setStep(3)
+
+  } catch {
+    mostrarErro('Não foi possível conectar ao servidor.')
+    btn.disabled = false
+    btn.textContent = 'Confirmar consulta ✓'
+  }
+}
+
+function novoAgendamento() {
+  document.getElementById('nome').value = ''
+  document.getElementById('telefone').value = ''
+  document.getElementById('email').value = ''
+  horarioSelecionado = null
+  mostrarView(1)
+}
+</script>
+</body>
+</html>
